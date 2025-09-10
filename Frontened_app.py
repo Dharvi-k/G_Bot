@@ -1,5 +1,5 @@
 import streamlit as st
-from chatbot_backened import GitaChatbot
+from backend_2 import GitaChatbot
 
 st.title("📖 Bhagavad Gita Chatbot")
 
@@ -14,4 +14,5 @@ if query:
         for v in verses:
             st.write("📜 Verse:", v)
     st.success(explanation)
+
 
