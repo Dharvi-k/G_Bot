@@ -11,6 +11,7 @@ import pandas as pd
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
+nltk.download('punkt_tab')
 
 
 class GitaChatbot:
@@ -133,6 +134,7 @@ class GitaChatbot:
                 return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
+
 
 
 
