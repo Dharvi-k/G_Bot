@@ -4,4 +4,6 @@ sentence-transformers
 torch
 faiss-cpu
 scikit-learn
-nltk
+nltk==3.7
+
+
