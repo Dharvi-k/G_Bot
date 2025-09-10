@@ -56,10 +56,6 @@ class GitaChatbot:
         self.df['tokens'] = self.df['text'].apply(self._preprocess_text)
         self.df['cleaned_verse'] = self.df['tokens'].apply(lambda x: ' '.join(x))
 
-       ''' # NLTK setup
-        nltk.download('stopwords')
-        nltk.download('punkt')
-        nltk.download('wordnet')'''
         self.stop_words = set(nltk.corpus.stopwords.words('english'))
         self.lemmatizer = nltk.WordNetLemmatizer()
     
@@ -137,5 +133,6 @@ class GitaChatbot:
                 return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
+
 
 
