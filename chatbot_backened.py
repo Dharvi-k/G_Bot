@@ -1,5 +1,6 @@
 # chatbot_backend.py
 import re
+import os
 import numpy as np
 import nltk
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
@@ -7,12 +8,24 @@ from sentence_transformers import SentenceTransformer, util
 from sklearn.linear_model import LogisticRegression
 import faiss
 import pandas as pd
-# NLTK setup
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('omw-1.4') 
 
+# ---------------------------
+# NLTK setup for cloud-safe usage
+# ---------------------------
+nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
+os.makedirs(nltk_data_dir, exist_ok=True)
+nltk.data.path.append(nltk_data_dir)
+
+required_resources = ["stopwords", "punkt", "wordnet", "omw-1.4"]
+for res in required_resources:
+    try:
+        nltk.data.find(res)
+    except LookupError:
+        nltk.download(res, download_dir=nltk_data_dir)
+
+# ---------------------------
+# Chatbot class
+# ---------------------------
 class GitaChatbot:
     def __init__(self, data_path='gita_translation_data.json'):
         # Load dataset
@@ -45,34 +58,31 @@ class GitaChatbot:
         X, y = self._prepare_intent_data()
         self.clf = LogisticRegression(max_iter=1000)
         self.clf.fit(X, y)
-        
+    
     # ---------------------------
     # Internal helper methods
     # ---------------------------
-    
     def _clean_and_preprocess(self):
-        # Example: remove unwanted spaces, lowercase, tokenize, etc.
         self.df['text'] = self.df['text'].astype(str).str.strip()
+        self.stop_words = set(nltk.corpus.stopwords.words('english'))
+        self.lemmatizer = nltk.WordNetLemmatizer()
         self.df['tokens'] = self.df['text'].apply(self._preprocess_text)
         self.df['cleaned_verse'] = self.df['tokens'].apply(lambda x: ' '.join(x))
 
-        self.stop_words = set(nltk.corpus.stopwords.words('english'))
-        self.lemmatizer = nltk.WordNetLemmatizer()
-    
     def _preprocess_text(self, text):
         text = text.lower()
         text = re.sub(r'[^a-z\s]', '', text)
         tokens = nltk.word_tokenize(text)
         tokens = [self.lemmatizer.lemmatize(w) for w in tokens if w not in self.stop_words]
         return tokens
-    
+
     def _prepare_intents(self):
         return {
             "greeting": ["hello", "hi", "hey there", "namaste"],
             "gita": ["what does the gita say about attachment", "explain karma yoga"],
             "out_of_domain": ["who is the president", "tell me a joke"]
         }
-    
+
     def _prepare_intent_data(self):
         X, y = [], []
         for label, samples in self.intents.items():
@@ -80,11 +90,11 @@ class GitaChatbot:
                 X.append(self.embedding_model.encode(s))
                 y.append(label)
         return np.array(X), np.array(y)
-    
+
     def detect_intent(self, query):
         vec = self.embedding_model.encode([query])
         return self.clf.predict(vec)[0]
-    
+
     def detect_task(self, query):
         query = query.lower()
         if "summarize" in query or "what is bhagavad gita" in query:
@@ -99,13 +109,13 @@ class GitaChatbot:
             return "thematic"
         else:
             return "default"
-    
+
     def retrieve_verses(self, query, k=3):
         cleaned_query = ' '.join(self._preprocess_text(query))
         query_emb = self.embedding_model.encode([cleaned_query]).astype('float32')
         D, I = self.index.search(query_emb, k=k)
         return [self.df.iloc[idx]['text'] for idx in I[0]]
-    
+
     def generate_explanation(self, query, retrieved_verses):
         task = self.detect_task(query)
         context = "\n".join(retrieved_verses)
@@ -117,7 +127,7 @@ class GitaChatbot:
             prompt = f"You are a Bhagavad Gita expert. Explain this: {query}\nContext:\n{context}"
             response = self.generator(prompt, max_new_tokens=300, temperature=0.7)
             return retrieved_verses, response[0]["generated_text"]
-    
+
     def chat(self, user_query, k=3):
         intent = self.detect_intent(user_query)
         if intent == "greeting":
@@ -133,9 +143,3 @@ class GitaChatbot:
                 return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
-
-
-
-
-
-
