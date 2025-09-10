@@ -11,7 +11,7 @@ import pandas as pd
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
-
+nltk.download('omw-1.4') 
 
 class GitaChatbot:
     def __init__(self, data_path='gita_translation_data.json'):
@@ -133,6 +133,7 @@ class GitaChatbot:
                 return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
+
 
 
 
