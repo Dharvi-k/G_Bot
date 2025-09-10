@@ -11,15 +11,16 @@ import pandas as pd
 # -------------------------
 # NLTK safe download setup
 # -------------------------
-def safe_nltk_download(resource):
+def safe_nltk_download(resource_name, resource_path):
     try:
-        nltk.data.find(resource)
+        nltk.data.find(resource_path)
     except LookupError:
-        nltk.download(resource.split('/')[-1])
+        nltk.download(resource_name)
 
-safe_nltk_download('corpora/stopwords')
-safe_nltk_download('tokenizers/punkt')
-safe_nltk_download('corpora/wordnet')
+# Ensure required NLTK resources are available
+safe_nltk_download('stopwords', 'corpora/stopwords')
+safe_nltk_download('punkt', 'tokenizers/punkt')
+safe_nltk_download('wordnet', 'corpora/wordnet')
 
 
 class GitaChatbot:
@@ -46,7 +47,9 @@ class GitaChatbot:
             bnb_4bit_compute_dtype="float16"
         )
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, device_map="auto", quantization_config=bnb_config)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_name, device_map="auto", quantization_config=bnb_config
+        )
         self.generator = pipeline("text-generation", model=self.model, tokenizer=self.tokenizer)
 
         # Intent classifier
@@ -147,7 +150,7 @@ class GitaChatbot:
             return None, "I’m sorry 🙏, I can only answer questions about the Bhagavad Gita."
         elif intent == "gita":
             task = self.detect_task(user_query)
-            verses = self.retrieve_verses(user_query, k) if task != "summarize" else self.retrieve_verses(user_query, k)
+            verses = self.retrieve_verses(user_query, k)
             return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
