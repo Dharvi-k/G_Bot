@@ -11,8 +11,7 @@ import pandas as pd
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
-self.stop_words = set(nltk.corpus.stopwords.words('english'))
-self.lemmatizer = nltk.WordNetLemmatizer()
+
 
 class GitaChatbot:
     def __init__(self, data_path='gita_translation_data.json'):
@@ -56,13 +55,13 @@ class GitaChatbot:
         self.df['text'] = self.df['text'].astype(str).str.strip()
         self.df['tokens'] = self.df['text'].apply(self._preprocess_text)
         self.df['cleaned_verse'] = self.df['tokens'].apply(lambda x: ' '.join(x))
-        
+
        ''' # NLTK setup
         nltk.download('stopwords')
         nltk.download('punkt')
-        nltk.download('wordnet')
+        nltk.download('wordnet')'''
         self.stop_words = set(nltk.corpus.stopwords.words('english'))
-        self.lemmatizer = nltk.WordNetLemmatizer()'''
+        self.lemmatizer = nltk.WordNetLemmatizer()
     
     def _preprocess_text(self, text):
         text = text.lower()
@@ -138,4 +137,5 @@ class GitaChatbot:
                 return self.generate_explanation(user_query, verses)
         else:
             return None, "I’m not sure how to respond to that."
+
 
